@@ -1,6 +1,8 @@
 # G+Lens 
+<img width="1920" height="1080" alt="output" src="https://github.com/user-attachments/assets/0bf013b5-59ec-4295-9868-650d24ca3eef" />
 
 一個可在Brave、Edge等非Chrome的Chromium瀏覽器上，復刻Chrome的Google智慧鏡頭功能的瀏覽器擴充功能。需要 Chromium 116 以上版本。
+
 
 ## 下載與安裝
 
@@ -25,5 +27,6 @@
 在工具列上右鍵此擴充功能，選擇「選項」
 - **【預設開啟】關閉結果視窗時一併結束框選**：開啟後，關掉搜尋結果視窗就直接回到原本的網頁，不會留在框選頁面
 - **快捷鍵**：預設 `Alt+Shift+S`，可自行更改
+<img width="872" height="530" alt="image" src="https://github.com/user-attachments/assets/e0199533-f593-43a4-b8d8-de6d70ee78e0" />
 
 ## G+Lens 不是 Google 官方產品。Google 與 Google 智慧鏡頭為 Google LLC 的商標。
