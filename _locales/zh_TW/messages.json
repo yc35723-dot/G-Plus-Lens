@@ -1,0 +1,58 @@
+{
+  "extName": {
+    "message": "G+Lens",
+    "description": "擴充功能名稱。"
+  },
+  "extDesc": {
+    "message": "框選網頁任一區域，用 Google 智慧鏡頭搜尋。",
+    "description": "擴充功能說明。"
+  },
+  "actionTitle": {
+    "message": "用 G+Lens 搜尋",
+    "description": "工具列按鈕提示。"
+  },
+  "menuSearch": {
+    "message": "用 G+Lens 搜尋",
+    "description": "開始框選的右鍵選單項目。"
+  },
+  "menuSearchImage": {
+    "message": "用 G+Lens 搜尋這張圖片",
+    "description": "圖片上的右鍵選單項目。"
+  },
+  "overlayClose": {
+    "message": "關閉",
+    "description": "框選遮罩關閉鈕提示。"
+  },
+  "viewerUploading": {
+    "message": "正在用 Google 智慧鏡頭搜尋…",
+    "description": "開始上傳時的狀態。"
+  },
+  "viewerOffline": {
+    "message": "無法連線到 Google 智慧鏡頭。",
+    "description": "預先檢查連不上 Google 時的狀態。"
+  },
+  "viewerFallback": {
+    "message": "結果沒有載入。",
+    "description": "一般備援狀態。"
+  },
+  "viewerRetry": {
+    "message": "重試",
+    "description": "重試按鈕。"
+  },
+  "viewerOpenTab": {
+    "message": "在新分頁開啟",
+    "description": "用新分頁開啟同一個搜尋。"
+  },
+  "viewerClose": {
+    "message": "關閉",
+    "description": "彈窗內的關閉按鈕。"
+  },
+  "viewerNoImage": {
+    "message": "沒有可搜尋的截圖，請先框選範圍。",
+    "description": "沒有待處理截圖時顯示。"
+  },
+  "viewerError": {
+    "message": "發生錯誤。",
+    "description": "一般錯誤訊息。"
+  }
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>G+Lens pixel pattern</title>
+<style>
+  :root { scrollbar-color: #9aa0a6 #e8eaed; }
+  ::-webkit-scrollbar { width: 17px; height: 17px; }
+  ::-webkit-scrollbar-thumb { background: #9aa0a6; }
+  ::-webkit-scrollbar-track { background: #e8eaed; }
+  html { overflow-y: scroll; }
+  body { margin: 0; background: #fff; }
+  .cell { position: absolute; width: 20px; height: 20px; }
+</style>
+</head>
+<body>
+<script>
+  const PALETTE = [
+    '#e8453c', '#34a853', '#4285f4', '#fbbc04', '#202124', '#ffffff',
+  ];
+  const COLS = 60;
+  const ROWS = 60;
+  const frag = document.createDocumentFragment();
+  for (let j = 0; j < ROWS; j += 1) {
+    for (let i = 0; i < COLS; i += 1) {
+      const node = document.createElement('div');
+      node.className = 'cell';
+      node.style.left = `${i * 20}px`;
+      node.style.top = `${j * 20}px`;
+      node.style.background = PALETTE[(i * 7 + j * 13) % PALETTE.length];
+      frag.appendChild(node);
+    }
+  }
+  globalThis.PALETTE = PALETTE;
+  document.body.appendChild(frag);
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+.test-build/
+test/artifacts/
+node_modules/
+*.log

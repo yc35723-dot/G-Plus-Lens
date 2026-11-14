@@ -1,0 +1,58 @@
+{
+  "extName": {
+    "message": "G+Lens",
+    "description": "Extension name."
+  },
+  "extDesc": {
+    "message": "Select any area of a page and search it with Google Lens.",
+    "description": "Extension description."
+  },
+  "actionTitle": {
+    "message": "Search with G+Lens",
+    "description": "Toolbar button tooltip."
+  },
+  "menuSearch": {
+    "message": "Search with G+Lens",
+    "description": "Context menu entry that starts area selection."
+  },
+  "menuSearchImage": {
+    "message": "Search this image with G+Lens",
+    "description": "Context menu entry shown on images."
+  },
+  "overlayClose": {
+    "message": "Close",
+    "description": "Close button tooltip on the selection overlay."
+  },
+  "viewerUploading": {
+    "message": "Searching with Google Lens…",
+    "description": "Status while the upload starts."
+  },
+  "viewerOffline": {
+    "message": "No connection to Google Lens.",
+    "description": "Status when the pre-check cannot reach Google."
+  },
+  "viewerFallback": {
+    "message": "The result did not load.",
+    "description": "Generic fallback status."
+  },
+  "viewerRetry": {
+    "message": "Try again",
+    "description": "Retry button."
+  },
+  "viewerOpenTab": {
+    "message": "Open in new tab",
+    "description": "Open the same search in a new tab."
+  },
+  "viewerClose": {
+    "message": "Close",
+    "description": "Close button in the popup."
+  },
+  "viewerNoImage": {
+    "message": "No screenshot to search. Capture an area first.",
+    "description": "Shown when the popup is opened without a pending capture."
+  },
+  "viewerError": {
+    "message": "Something went wrong.",
+    "description": "Generic error message."
+  }
+}

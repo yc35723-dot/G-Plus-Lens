@@ -1,0 +1,88 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1f1f1f;
+  --muted: #5f6368;
+  --line: rgba(0, 0, 0, .12);
+  --button-bg: #1a73e8;
+  --button-fg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1f1f;
+    --fg: #e8eaed;
+    --muted: #9aa0a6;
+    --line: rgba(255, 255, 255, .16);
+    --button-bg: #8ab4f8;
+    --button-fg: #202124;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
+}
+
+#app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  padding: 24px;
+}
+
+#crop {
+  max-width: 100%;
+  max-height: 30vh;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #fff;
+}
+
+#status {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  max-width: 34ch;
+}
+
+#actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  cursor: pointer;
+}
+
+button:hover { filter: brightness(1.06); }
+button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+#app.state-loading #actions,
+#app.state-error #crop {
+  display: none;
+}
+
+#actions[hidden] { display: none; }
+
+#app.state-error {
+  background: var(--bg);
+}
