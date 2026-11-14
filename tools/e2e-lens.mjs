@@ -85,24 +85,24 @@ try {
       if (msg.method === 'Runtime.exceptionThrown') diag.push(['exc', msg.params.exceptionDetails.text, msg.params.exceptionDetails.exception?.description?.slice(0, 300)]);
     });
     await sleep(800);
-    console.log('viewer state:', await vp.evaluate(`JSON.stringify({
-      cls: document.getElementById('app').className,
-      status: document.getElementById('status').textContent,
+    const safeEval = (expression) => vp.evaluate(expression).catch((error) => `detached: ${String(error).slice(0, 60)}`);
+
+    console.log('viewer state:', await safeEval(`JSON.stringify({
+      cls: document.getElementById('app')?.className ?? null,
+      status: document.getElementById('status')?.textContent ?? null,
       forms: document.querySelectorAll('form').length,
-      fileLen: document.querySelector('input[type=file]')?.files?.length ?? null,
       href: location.href,
       online: navigator.onLine,
-      vis: document.visibilityState,
     })`));
     await vp.send('Network.enable').catch(() => {});
     for (let i = 0; i < 3; i += 1) {
       await sleep(2000);
-      console.log(`probe+${i}`, await vp.evaluate(`JSON.stringify({
+      console.log(`probe+${i}`, await safeEval(`JSON.stringify({
         href: location.href,
-        cls: document.getElementById('app')?.className,
-        status: document.getElementById('status')?.textContent,
+        cls: document.getElementById('app')?.className ?? null,
+        status: document.getElementById('status')?.textContent ?? null,
         forms: document.querySelectorAll('form').length,
-      })`).catch((error) => `detached: ${String(error).slice(0, 60)}`));
+      })`));
     }
     console.log('viewer diag:', JSON.stringify(diag, null, 2));
     vp.close();

@@ -308,12 +308,20 @@
     closed = true;
     clearTimeout(resizeTimer);
     removeListeners();
+    chrome.runtime.onMessage.removeListener(onHostMessage);
     host.remove();
     if (notify) {
       chrome.runtime.sendMessage({ type: 'gplens:cancel' }, () => {
         void chrome.runtime.lastError;
       });
     }
+  }
+
+  function onHostMessage(msg, _sender, respond) {
+    if (!msg || msg.type !== 'gplens:close') return false;
+    finish(false);
+    if (respond) respond({ ok: true });
+    return false;
   }
 
   function onKeyDown(ev) {
@@ -370,6 +378,7 @@
   }
 
   for (const [target, type, fn, opt] of listeners) target.addEventListener(type, fn, opt);
+  chrome.runtime.onMessage.addListener(onHostMessage);
   img.addEventListener('load', layout, { once: true });
   layout();
   if (img.complete) layout();

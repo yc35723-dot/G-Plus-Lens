@@ -8,6 +8,7 @@ const INCLUDE = [
   'shared',
   'content',
   'viewer',
+  'options',
   'icons',
   '_locales',
 ];

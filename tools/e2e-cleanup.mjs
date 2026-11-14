@@ -65,7 +65,9 @@ try {
 
   await worker.evaluate(`(async()=>{
     const s = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-    await chrome.storage.session.set({ 'gplens:shot': { shot: s, at: Date.now() } });
+    const shots = {};
+    shots[${tabId}] = { shot: s, at: Date.now() };
+    await chrome.storage.session.set({ 'gplens:shots': shots });
     await chrome.scripting.executeScript({
       target: { tabId: ${tabId} },
       func: (cfg) => { globalThis.__GPLENS_INIT__ = cfg; },
@@ -85,17 +87,50 @@ try {
   results.after = JSON.parse(await snapshot());
 
   const shotCleared = await worker.evaluate(`(async()=>{
-    const stored = await chrome.storage.session.get('gplens:shot');
-    return stored['gplens:shot'] ? 'present' : 'cleared';
+    const stored = await chrome.storage.session.get('gplens:shots');
+    return stored['gplens:shots'] ? 'present' : 'cleared';
   })()`);
   results.shotStorage = shotCleared;
+
+  await worker.evaluate(`(async()=>{
+    const s = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+    const shots = {};
+    shots[${tabId}] = { shot: s, at: Date.now() };
+    await chrome.storage.session.set({ 'gplens:shots': shots });
+    await chrome.scripting.executeScript({
+      target: { tabId: ${tabId} },
+      func: (cfg) => { globalThis.__GPLENS_INIT__ = cfg; },
+      args: [{ shot: s, messages: { close: 'Close' } }],
+    });
+    await chrome.scripting.executeScript({ target: { tabId: ${tabId} }, files: ['content/overlay.js'] });
+    return 'mounted';
+  })()`);
+  await waitFor(() => page.evaluate(`Boolean(document.getElementById('gplens-overlay-host'))`), { label: 'host re-mounted' });
+
+  await page.send('Page.bringToFront').catch(() => {});
+  await worker.evaluate(`(async()=>{
+    await chrome.tabs.sendMessage(${tabId}, { type: 'gplens:close' });
+    return 'sent';
+  })()`);
+  await waitFor(() => page.evaluate(`!document.getElementById('gplens-overlay-host')`), { label: 'messaged close' });
+  results.afterMessageClose = JSON.parse(await snapshot());
+  results.messageCloseStorage = await worker.evaluate(`(async()=>{
+    const stored = await chrome.storage.session.get('gplens:shots');
+    return stored['gplens:shots'] ? 'present' : 'cleared';
+  })()`);
 
   const clean =
     results.after.nodes === results.before2.nodes &&
     results.after.hosts === 0 &&
     results.after.styles === results.before2.styles &&
     results.after.sheets === results.before2.sheets &&
-    results.after.scrollY === results.before2.scrollY;
+    results.after.scrollY === results.before2.scrollY &&
+    results.shotStorage === 'cleared' &&
+    results.afterMessageClose.nodes === results.before2.nodes &&
+    results.afterMessageClose.hosts === 0 &&
+    results.afterMessageClose.styles === results.before2.styles &&
+    results.afterMessageClose.sheets === results.before2.sheets &&
+    results.afterMessageClose.scrollY === results.before2.scrollY;
 
   results.verdict = clean ? 'PASS' : 'FAIL';
   console.log(JSON.stringify(results, null, 2));

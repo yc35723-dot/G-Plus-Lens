@@ -2,9 +2,10 @@ import { normalizeLang } from './shared/lens.js';
 import { computePopupBounds } from './shared/window.js';
 import { computeCrop } from './shared/geometry.js';
 import { pickLargestImage } from './shared/target.js';
+import { readSettings } from './shared/settings.js';
 
 const PENDING_KEY = 'gplens:pending';
-const SHOT_KEY = 'gplens:shot';
+const SHOTS_KEY = 'gplens:shots';
 const POPUP_KEY = 'gplens:popup';
 const MENU_PAGE = 'gplens-page';
 const MENU_IMAGE = 'gplens-image';
@@ -59,23 +60,39 @@ chrome.runtime.onMessage.addListener((msg, sender, respond) => {
   }
 
   if (msg.type === 'gplens:cancel') {
-    chrome.storage.session.remove(SHOT_KEY).catch(() => {});
-    respond({ ok: true });
-    return false;
+    const tabId = sender.tab?.id;
+    (async () => {
+      if (Number.isInteger(tabId)) await dropShot(tabId);
+      respond({ ok: true });
+    })();
+    return true;
   }
 
   return false;
 });
 
+chrome.tabs.onRemoved.addListener((tabId) => {
+  dropShot(tabId).catch(() => {});
+});
+
 chrome.windows.onRemoved.addListener(async (windowId) => {
+  let isPopup = false;
   try {
     const stored = await chrome.storage.session.get(POPUP_KEY);
-    if (stored[POPUP_KEY]?.windowId !== windowId) return;
-    await chrome.storage.session.remove([PENDING_KEY, POPUP_KEY]);
+    isPopup = stored[POPUP_KEY]?.windowId === windowId;
+    if (isPopup) await chrome.storage.session.remove([PENDING_KEY, POPUP_KEY]);
   } catch {
     /* session storage resets when the worker restarts */
   }
+  if (!isPopup) return;
+  if (!(await shouldCloseOverlays())) return;
+  await closeAllOverlays();
 });
+
+async function shouldCloseOverlays() {
+  const settings = await readSettings();
+  return settings.closeOverlayWithPopup;
+}
 
 function isScriptable(url) {
   return typeof url === 'string' && /^(https?|file):/i.test(url);
@@ -102,6 +119,49 @@ async function captureShot(tab) {
   }
 }
 
+async function readShots() {
+  try {
+    const stored = await chrome.storage.session.get(SHOTS_KEY);
+    const value = stored[SHOTS_KEY];
+    return value && typeof value === 'object' ? value : {};
+  } catch {
+    return {};
+  }
+}
+
+async function saveShot(tabId, shot) {
+  if (!Number.isInteger(tabId)) return;
+  try {
+    const shots = await readShots();
+    shots[tabId] = { shot, at: Date.now() };
+    await chrome.storage.session.set({ [SHOTS_KEY]: shots });
+  } catch {
+    /* storage may be unavailable */
+  }
+}
+
+async function readShot(tabId) {
+  if (!Number.isInteger(tabId)) return null;
+  const shots = await readShots();
+  return shots[tabId]?.shot || null;
+}
+
+async function dropShot(tabId) {
+  if (!Number.isInteger(tabId)) return;
+  try {
+    const shots = await readShots();
+    if (!shots[tabId]) return;
+    delete shots[tabId];
+    if (Object.keys(shots).length) {
+      await chrome.storage.session.set({ [SHOTS_KEY]: shots });
+    } else {
+      await chrome.storage.session.remove(SHOTS_KEY);
+    }
+  } catch {
+    /* storage may be unavailable */
+  }
+}
+
 async function startFreeze(tab) {
   if (!tab || tab.id == null || !isScriptable(tab.url)) return;
   if (await hasOverlay(tab.id)) return;
@@ -109,13 +169,7 @@ async function startFreeze(tab) {
   const shot = await captureShot(tab);
   if (!shot) return;
 
-  try {
-    await chrome.storage.session.set({
-      [SHOT_KEY]: { shot, w: tab.width || 0, h: tab.height || 0, at: Date.now() },
-    });
-  } catch {
-    /* storage may be unavailable */
-  }
+  await saveShot(tab.id, shot);
 
   const init = { shot, messages: { close: t('overlayClose') } };
 
@@ -132,27 +186,52 @@ async function startFreeze(tab) {
       files: ['content/overlay.js'],
     });
   } catch {
-    /* the page lost scripting access mid-flight */
+    await dropShot(tab.id);
   }
+}
+
+async function closeOverlay(tabId) {
+  let delivered = false;
+  try {
+    await chrome.tabs.sendMessage(tabId, { type: 'gplens:close' });
+    delivered = true;
+  } catch {
+    delivered = false;
+  }
+
+  if (!delivered) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (id) => {
+          const host = document.getElementById(id);
+          if (host) host.remove();
+        },
+        args: [HOST_ID],
+      });
+    } catch {
+      /* the tab is gone or not scriptable */
+    }
+  }
+
+  await dropShot(tabId);
+}
+
+async function closeAllOverlays() {
+  const shots = await readShots();
+  const tabIds = Object.keys(shots)
+    .map((key) => Number(key))
+    .filter((id) => Number.isInteger(id));
+  await Promise.all(tabIds.map((tabId) => closeOverlay(tabId)));
 }
 
 async function finishSelection(tab, selection) {
-  const shot = await readStoredShot();
-  const source = shot || (await captureShot(tab));
+  const tabId = tab?.id;
+  const source = (await readShot(tabId)) || (await captureShot(tab));
   if (!source) return;
   const dataUrl = await cropShot(source, selection.rect, selection.basis.w, selection.basis.h);
   if (!dataUrl) return;
-  await chrome.storage.session.remove(SHOT_KEY).catch(() => {});
   await openViewer(dataUrl);
-}
-
-async function readStoredShot() {
-  try {
-    const stored = await chrome.storage.session.get(SHOT_KEY);
-    return stored[SHOT_KEY]?.shot || null;
-  } catch {
-    return null;
-  }
 }
 
 async function searchImage(tab, info) {

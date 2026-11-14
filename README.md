@@ -15,14 +15,43 @@
 
 ## 使用
 
-- **工具列圖示**或**快捷鍵 `Alt+Shift+L`**：進入框選模式。
+- **工具列圖示**或**快捷鍵 `Alt+Shift+S`**：進入框選模式。
+- **右鍵工具列圖示 → 選項**：開啟設定頁。
 - **右鍵 → 用 G+Lens 搜尋**：進入框選模式。
 - **右鍵圖片 → 用 G+Lens 搜尋這張圖片**：直接以該圖片所在區域搜尋，跳過框選。
 - **拖曳**框出範圍，放開滑鼠立即搜尋。搜尋後遮罩仍保留，方便微調。
 - **拖曳框選範圍的四角或四邊**調整大小、**在框內拖曳**重新框選；停手 0.3 秒後自動重新搜尋。
 - **Esc**、**右上關閉鈕**或**點框外空白處**都能退出框選模式。
+- 關閉 Lens 結果視窗時，預設也會一併結束框選；可在設定頁關閉此行為。
 
 框選小於 12×12 像素視為誤觸，不會觸發搜尋。
+
+## 設定頁
+
+`options/` 有兩項設定：
+
+| 設定 | 預設 | 說明 |
+| --- | --- | --- |
+| 關閉結果視窗時，一併結束框選 | 開 | 關掉後，關閉結果視窗會保留框選畫面，需自行按 Esc。 |
+| 鍵盤快速鍵 | `Alt+Shift+S` | 只能顯示與引導，無法在擴充功能內修改（見下）。 |
+
+### 為什麼快捷鍵不能在設定頁直接改
+
+這個 Chromium（Brave 157）**沒有 `chrome.commands.update`**——那是 Firefox 才有的 API。Chromium 只開放給使用者透過內建頁面指派：
+
+1. 設定頁的「在瀏覽器中變更」會開啟 `chrome://extensions/shortcuts`（Edge 為 `edge://extensions/shortcuts`）。
+2. 找到 G+Lens 的「啟動擴充功能」一列，按下想要的組合鍵。
+3. 回到設定頁，顯示的按鍵會自動更新。
+
+擴充功能每次開啟設定頁（或切回該分頁）都會用 `chrome.commands.getAll()` 重新讀取實際生效的按鍵，所以畫面上看到的永遠是真正生效的值。
+
+**快捷鍵必須綁在 `_execute_action`**：Chromium 只在工具列按鈕被觸發時授予 `activeTab`。若改用自訂 command 名稱，`captureVisibleTab` 會因為沒有 `activeTab` 而失敗。
+
+### 快捷鍵沒反應時
+
+- 若顯示「尚未指派」：組合鍵被系統或輸入法佔用，Chromium 會拒絕登記。改用 `Ctrl+Shift+L` 之類的組合。
+- 繁體中文輸入法常用 `Alt+Shift` 切換，容易互搶；這種情況請改用 `Ctrl` 或 `Ctrl+Shift` 開頭的組合。
+- 遮罩已經開啟時再按快捷鍵不會有反應（避免誤觸關閉正在調整的框選）。
 
 ## 架構與取捨
 
@@ -33,6 +62,7 @@
 | Shadow DOM 隔離 | 遮罩與框線不受宿主網頁 CSS 影響，退出時整個 host 節點移除。 |
 | 結果用原生 popup 視窗 | 不嵌 iframe、不改任何 HTTP 標頭（不碰 `declarativeNetRequest`），避免 CSP／XFO 造成的一整類問題。 |
 | 裁切在 service worker 進行 | 先把截圖解碼成 `ImageBitmap` 再裁切，避免直接對 `<img>` 元素取樣造成的色彩捨入誤差。 |
+| 關窗連動用訊息拆卸 | 遮罩的拆卸走內容腳本自己的 `finish()`，確保事件監聽、計時器、DOM 一次清乾淨，而不是從背景硬刪節點。 |
 
 ### 為什麼不能用 `fetch` 上傳
 
@@ -51,6 +81,7 @@
 
 - `host_permissions` 只有這兩個 Google 網域，**沒有 `<all_urls>`**。
 - `www.google.com` 是必要的：Lens 上傳端點會 303 到 `www.google.com/search`，預檢需要授權才能判斷連線是否正常。
+- `storage` 用於 session 暫存截圖與本機設定（`chrome.storage.local`）。
 - 沒有 `web_accessible_resources`：面板是本擴充功能自己的視窗，不需要對網頁曝光任何資源。
 - 沒有分析、遠端程式碼、使用者追蹤。
 
@@ -63,6 +94,8 @@
 - **iframe 內的圖片**：右鍵選單在子框架上時會退回框選模式（截圖本身只包含主文件可視區）。
 - **彈出視窗會搶焦點**：`type: "popup"` 沒有網址列與分頁列，第一次搜尋後若再搜尋會重用同一個視窗。
 - **Google 的淺／深色主題**：結果頁配色由 Google 決定，不受擴充功能控制。
+- **快捷鍵不能在擴充功能內修改**：Chromium 沒有 `commands.update`，只能導引到瀏覽器內建頁面。
+- **關窗連動的範圍**：設定為開時，關閉結果視窗會關閉所有分頁上的框選遮罩，不只最後一次搜尋的那個分頁。
 
 ## 介面規格
 
@@ -77,10 +110,11 @@
 
 ```
 manifest.json        擴充功能設定
-background.js        service worker：選單、截圖、裁切、開窗
+background.js        service worker：選單、截圖、裁切、開窗、關窗連動
 content/overlay.js   框選遮罩（注入式，非 content script）
 viewer/              彈出視窗頁面：預檢 + 表單上傳 + 備援
-shared/              純函式：語言、視窗尺寸、裁切幾何、圖片挑選
+options/             設定頁
+shared/              純函式：語言、視窗尺寸、裁切幾何、圖片挑選、設定、快捷鍵
 _locales/            英文 / 繁體中文
 icons/               圖示（tools/make_icons.py 產生）
 test/                驗收用固定頁（pattern.html 為逐像素驗證用）
@@ -99,8 +133,12 @@ node tools/test-all.mjs
 | 測試 | 內容 | 通過條件 |
 | --- | --- | --- |
 | `e2e-crop` @1x / 1.25x / 1.5x | 拖曳框選後比對裁切結果與原始截圖 | 幾何完全相符且 **0 個像素差異** |
-| `e2e-cleanup` | Esc 退出後的 DOM 狀態 | 節點數回到初始值、host 節點為 0、樣式表數量不變 |
+| `e2e-cleanup` | Esc 與訊息兩條退出路徑的 DOM 狀態 | 節點數回到初始值、host 節點為 0、樣式表數量不變、暫存截圖清空 |
+| `e2e-settings` | 設定頁 15 項檢查 | 預設值、持久化、重載保留、快捷鍵顯示與 `getAll()` 一致、變更按鈕開啟瀏覽器頁面 |
+| `e2e-popup-close` | 關閉結果視窗的兩種設定 | 開：遮罩消失；關：遮罩保留且 Esc 仍可退出 |
 | `e2e-lens` | 表單上傳與彈出視窗導覽 | 視窗最終停留在 `google.com/search?…` |
+
+**手動檢查（無法自動化）**：實際按一次 `Alt+Shift+S` 確認遮罩出現。全域熱鍵無法用 CDP 注入，用 `SendKeys` 會誤送到你目前使用中的視窗，因此這項留給人工。
 
 測試會把 `host_permissions` 臨時加上 `<all_urls>`（僅測試副本，不會動到正式 `manifest.json`），因為 `captureVisibleTab` 需要 `activeTab`，而 CDP 直接呼叫不具備使用者手勢。
 

@@ -54,5 +54,45 @@
   "viewerError": {
     "message": "發生錯誤。",
     "description": "一般錯誤訊息。"
+  },
+  "optionsTitle": {
+    "message": "設定",
+    "description": "設定頁標題後綴。"
+  },
+  "optionsResultGroup": {
+    "message": "結果視窗",
+    "description": "設定頁中結果視窗行為的區塊標題。"
+  },
+  "optionsCloseLabel": {
+    "message": "關閉結果視窗時，一併結束框選",
+    "description": "設定頁勾選框標籤。"
+  },
+  "optionsCloseHint": {
+    "message": "開啟時，關閉結果視窗會同時結束框選並回到原本的網頁。",
+    "description": "設定頁勾選框提示。"
+  },
+  "optionsShortcutGroup": {
+    "message": "鍵盤快速鍵",
+    "description": "設定頁中快速鍵的區塊標題。"
+  },
+  "optionsShortcutChange": {
+    "message": "在瀏覽器中變更",
+    "description": "開啟瀏覽器快速鍵頁面的按鈕。"
+  },
+  "optionsShortcutHint": {
+    "message": "Chromium 只允許在瀏覽器內建的擴充功能快速鍵頁面修改按鍵。",
+    "description": "說明為何無法在設定頁直接改。"
+  },
+  "optionsShortcutEmpty": {
+    "message": "目前沒有指派快速鍵。請用「在瀏覽器中變更」設定一組。",
+    "description": "快速鍵未指派時顯示。"
+  },
+  "optionsNotAssigned": {
+    "message": "尚未指派",
+    "description": "未指派快速鍵時的替代文字。"
+  },
+  "optionsSaved": {
+    "message": "已儲存",
+    "description": "變更設定後的短暫提示。"
   }
 }

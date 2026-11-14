@@ -10,6 +10,8 @@ const suites = [
   ['crop @1.25x', ['tools/e2e-crop.mjs', '--scale', '1.25', '--port', String(port)]],
   ['crop @1.5x', ['tools/e2e-crop.mjs', '--scale', '1.5', '--port', String(port)]],
   ['cleanup', ['tools/e2e-cleanup.mjs', '--port', String(port)]],
+  ['settings', ['tools/e2e-settings.mjs', '--port', String(port)]],
+  ['popup close', ['tools/e2e-popup-close.mjs', '--port', String(port)]],
   ['lens upload', ['tools/e2e-lens.mjs', '--port', String(port)]],
 ];
 

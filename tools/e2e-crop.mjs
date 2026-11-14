@@ -79,9 +79,9 @@ try {
   })`);
 
   await worker.evaluate(`(async()=>{
-    await chrome.storage.session.set({
-      'gplens:shot': { shot: ${JSON.stringify(shot)}, w: 0, h: 0, at: Date.now() },
-    });
+    const shots = {};
+    shots[${tabId}] = { shot: ${JSON.stringify(shot)}, at: Date.now() };
+    await chrome.storage.session.set({ 'gplens:shots': shots });
     await chrome.scripting.executeScript({
       target: { tabId: ${tabId} },
       func: (cfg) => { globalThis.__GPLENS_INIT__ = cfg; },

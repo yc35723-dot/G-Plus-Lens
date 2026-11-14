@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>G+Lens</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="page">
+    <header class="head">
+      <h1 id="title"></h1>
+      <span id="saved" class="saved" role="status" aria-live="polite"></span>
+    </header>
+
+    <section class="group" aria-labelledby="group-result">
+      <h2 id="group-result"></h2>
+
+      <label class="row" for="close-with-popup">
+        <input type="checkbox" id="close-with-popup">
+        <span class="row-text">
+          <span id="close-label" class="row-label"></span>
+          <span id="close-hint" class="row-hint"></span>
+        </span>
+      </label>
+    </section>
+
+    <section class="group" aria-labelledby="group-shortcut">
+      <h2 id="group-shortcut"></h2>
+
+      <div class="row row-static">
+        <span class="keys" id="shortcut-keys" aria-hidden="true"></span>
+        <button type="button" id="change-shortcut"></button>
+      </div>
+      <p class="row-hint" id="shortcut-hint"></p>
+      <p class="warn" id="shortcut-empty" hidden></p>
+    </section>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

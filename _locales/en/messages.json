@@ -54,5 +54,45 @@
   "viewerError": {
     "message": "Something went wrong.",
     "description": "Generic error message."
+  },
+  "optionsTitle": {
+    "message": "Settings",
+    "description": "Options page title suffix."
+  },
+  "optionsResultGroup": {
+    "message": "Result window",
+    "description": "Options section heading for result window behaviour."
+  },
+  "optionsCloseLabel": {
+    "message": "Close the selection overlay with the result window",
+    "description": "Options checkbox label."
+  },
+  "optionsCloseHint": {
+    "message": "When on, closing the result window also ends area selection and returns you to the page.",
+    "description": "Options checkbox hint."
+  },
+  "optionsShortcutGroup": {
+    "message": "Keyboard shortcut",
+    "description": "Options section heading for the keyboard shortcut."
+  },
+  "optionsShortcutChange": {
+    "message": "Change in browser",
+    "description": "Button that opens the browser shortcut page."
+  },
+  "optionsShortcutHint": {
+    "message": "Chromium only allows changing this in the browser’s own extension shortcuts page.",
+    "description": "Explains why the shortcut cannot be edited inline."
+  },
+  "optionsShortcutEmpty": {
+    "message": "No shortcut is assigned. Use “Change in browser” to pick one.",
+    "description": "Shown when the shortcut is unassigned."
+  },
+  "optionsNotAssigned": {
+    "message": "Not assigned",
+    "description": "Shortcut placeholder when nothing is assigned."
+  },
+  "optionsSaved": {
+    "message": "Saved",
+    "description": "Transient confirmation after changing a setting."
   }
 }

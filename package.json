@@ -1,6 +1,6 @@
 {
   "name": "g-plus-lens",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Area-select Google Lens search for non-Chrome Chromium browsers.",
   "type": "module",
@@ -9,6 +9,8 @@
     "test": "node tools/test-all.mjs",
     "test:crop": "node tools/e2e-crop.mjs",
     "test:cleanup": "node tools/e2e-cleanup.mjs",
+    "test:settings": "node tools/e2e-settings.mjs",
+    "test:popup-close": "node tools/e2e-popup-close.mjs",
     "test:lens": "node tools/e2e-lens.mjs",
     "icons": "python tools/make_icons.py"
   },
