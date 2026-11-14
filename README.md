@@ -1,11 +1,11 @@
 # G+Lens 
-[English README](README-en.md) |
-<img width="1920" height="1080" alt="output" src="https://github.com/user-attachments/assets/0bf013b5-59ec-4295-9868-650d24ca3eef" />
+[English README](README-en.md) 
+
 
 An extension for Brave, Edge, and other Chromium browsers that replicates Google Lens. Simply drag and select any area of a page to search the web with Google Lens. Requires Chromium 116 or higher.
 
 一個可在Brave、Edge等非Chrome的Chromium瀏覽器上，復刻Chrome的Google智慧鏡頭功能的擴充功能，可框選網頁任一區域，用 Google 智慧鏡頭搜尋。需要 Chromium 116 以上版本。
-
+<img width="1920" height="1080" alt="output" src="https://github.com/user-attachments/assets/0bf013b5-59ec-4295-9868-650d24ca3eef" />
 
 ## 下載與安裝
 
