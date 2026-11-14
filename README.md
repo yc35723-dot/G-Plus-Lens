@@ -1,4 +1,5 @@
 # G+Lens 
+[English README](README-en.md) |
 <img width="1920" height="1080" alt="output" src="https://github.com/user-attachments/assets/0bf013b5-59ec-4295-9868-650d24ca3eef" />
 
 An extension for Brave, Edge, and other Chromium browsers that replicates Google Lens. Simply drag and select any area of a page to search the web with Google Lens. Requires Chromium 116 or higher.
