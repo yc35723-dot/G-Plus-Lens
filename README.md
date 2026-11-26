@@ -1,5 +1,5 @@
 # G+Lens 
-
+[English version](./README-en.md)
 一個可在Brave、Edge等非Chrome的Chromium瀏覽器上，復刻Chrome的Google智慧鏡頭功能的瀏覽器擴充功能。需要 Chromium 116 以上版本。
 <img width="1920" height="1080" alt="output" src="https://github.com/user-attachments/assets/0bf013b5-59ec-4295-9868-650d24ca3eef" />
 
