@@ -7,7 +7,9 @@
   "scripts": {
     "serve": "node tools/serve.mjs test 8471",
     "test": "node tools/test-all.mjs",
+    "test:unit": "node --test test/settings.test.mjs",
     "test:crop": "node tools/e2e-crop.mjs",
+    "test:crop:frozen": "node tools/e2e-crop.mjs --frozen",
     "test:cleanup": "node tools/e2e-cleanup.mjs",
     "test:settings": "node tools/e2e-settings.mjs",
     "test:popup-close": "node tools/e2e-popup-close.mjs",

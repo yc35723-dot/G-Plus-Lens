@@ -1,7 +1,6 @@
-import { buildUploadUrl, normalizeLang } from '../shared/lens.js';
+import { buildUploadUrl, normalizeLang, submitImageForm } from '../shared/lens.js';
 
 const PENDING_KEY = 'gplens:pending';
-const IMAGE_FIELD = 'encoded_image';
 const PREFLIGHT_TIMEOUT = 4000;
 const GUARD_DELAY = 8000;
 
@@ -70,36 +69,12 @@ async function preflight() {
 }
 
 function submitForm(target) {
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.enctype = 'multipart/form-data';
-  form.action = buildUploadUrl(pending.lang);
-  form.target = target;
-  form.acceptCharset = 'UTF-8';
-  form.hidden = true;
-
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.name = IMAGE_FIELD;
-  form.appendChild(input);
-  document.body.appendChild(form);
-
-  const transfer = new DataTransfer();
-  transfer.items.add(dataUrlToFile(pending.dataUrl));
-  input.files = transfer.files;
-
   submitted = true;
-  form.submit();
-  setTimeout(() => form.remove(), 0);
-}
-
-function dataUrlToFile(dataUrl) {
-  const comma = dataUrl.indexOf(',');
-  const mime = (dataUrl.slice(5, comma).split(';')[0] || 'image/png').trim();
-  const binary = atob(dataUrl.slice(comma + 1));
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return new File([bytes], 'crop.png', { type: mime });
+  submitImageForm({
+    dataUrl: pending.dataUrl,
+    actionUrl: buildUploadUrl(pending.lang),
+    target,
+  });
 }
 
 function showFallback(message) {

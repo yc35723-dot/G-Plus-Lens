@@ -65,9 +65,9 @@ try {
 
   await worker.evaluate(`(async()=>{
     const s = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-    const shots = {};
-    shots[${tabId}] = { shot: s, at: Date.now() };
-    await chrome.storage.session.set({ 'gplens:shots': shots });
+    const overlays = {};
+    overlays[${tabId}] = { shot: s, at: Date.now() };
+    await chrome.storage.session.set({ 'gplens:overlays': overlays });
     await chrome.scripting.executeScript({
       target: { tabId: ${tabId} },
       func: (cfg) => { globalThis.__GPLENS_INIT__ = cfg; },
@@ -87,16 +87,16 @@ try {
   results.after = JSON.parse(await snapshot());
 
   const shotCleared = await worker.evaluate(`(async()=>{
-    const stored = await chrome.storage.session.get('gplens:shots');
-    return stored['gplens:shots'] ? 'present' : 'cleared';
+    const stored = await chrome.storage.session.get('gplens:overlays');
+    return stored['gplens:overlays'] ? 'present' : 'cleared';
   })()`);
   results.shotStorage = shotCleared;
 
   await worker.evaluate(`(async()=>{
     const s = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-    const shots = {};
-    shots[${tabId}] = { shot: s, at: Date.now() };
-    await chrome.storage.session.set({ 'gplens:shots': shots });
+    const overlays = {};
+    overlays[${tabId}] = { shot: s, at: Date.now() };
+    await chrome.storage.session.set({ 'gplens:overlays': overlays });
     await chrome.scripting.executeScript({
       target: { tabId: ${tabId} },
       func: (cfg) => { globalThis.__GPLENS_INIT__ = cfg; },
@@ -115,8 +115,8 @@ try {
   await waitFor(() => page.evaluate(`!document.getElementById('gplens-overlay-host')`), { label: 'messaged close' });
   results.afterMessageClose = JSON.parse(await snapshot());
   results.messageCloseStorage = await worker.evaluate(`(async()=>{
-    const stored = await chrome.storage.session.get('gplens:shots');
-    return stored['gplens:shots'] ? 'present' : 'cleared';
+    const stored = await chrome.storage.session.get('gplens:overlays');
+    return stored['gplens:overlays'] ? 'present' : 'cleared';
   })()`);
 
   const clean =

@@ -58,6 +58,7 @@ h1 {
 }
 
 .saved.show { opacity: 1; }
+.saved.error { color: #c5221f; }
 
 .group {
   padding-top: 24px;
@@ -121,6 +122,14 @@ input[type="checkbox"] {
   color: var(--muted);
 }
 
+.incognito-access {
+  padding: 0 12px 12px;
+}
+
+.incognito-access p {
+  margin: 0 0 8px;
+}
+
 .keys {
   display: inline-flex;
   align-items: center;
@@ -175,4 +184,5 @@ input:focus-visible {
 
 @media (prefers-color-scheme: dark) {
   .warn { color: #f28b82; }
+  .saved.error { color: #f28b82; }
 }

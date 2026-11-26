@@ -11,6 +11,7 @@ const source = resolve(process.env.GPLENS_EXT || '.');
 const fixture = opts.fixture || 'http://127.0.0.1:8471/pattern.html';
 const outDir = resolve(opts.outDir || 'test/artifacts');
 const scale = Number(opts.scale || 1);
+const scrollMode = !opts.frozen;
 const profile = mkdtempSync(join(tmpdir(), 'gplens-e2e-'));
 const SELECT = { x: 137, y: 96, w: 402, h: 268 };
 
@@ -31,6 +32,7 @@ const browser = spawn(opts.browser, [
 ], { stdio: 'ignore' });
 
 let browserClient = null;
+const workerDiagnostics = [];
 
 try {
   browserClient = await CDP.attach(await browserWsUrl(opts.port));
@@ -58,18 +60,23 @@ try {
 
   const worker = await CDP.attach(swTarget.webSocketDebuggerUrl);
   await worker.send('Runtime.enable');
+  worker.ws.addEventListener('message', (event) => {
+    const message = JSON.parse(event.data);
+    if (message.method === 'Runtime.consoleAPICalled') {
+      workerDiagnostics.push(
+        message.params.args.map((arg) => arg.value || arg.description || '').join(' '),
+      );
+    }
+    if (message.method === 'Runtime.exceptionThrown') {
+      workerDiagnostics.push(message.params.exceptionDetails.text);
+    }
+  });
 
   const tabId = await worker.evaluate(`(async()=>{
     const tabs = await chrome.tabs.query({});
     const tab = tabs.find((t) => (t.url || '').startsWith(${JSON.stringify(origin)}));
     return tab ? tab.id : tabs[0].id;
   })()`);
-
-  const shot = await worker.evaluate(`(async()=>{
-    const data = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-    return data;
-  })()`);
-  writeFileSync(join(outDir, `shot-${opts.scale}x.png`), Buffer.from(shot.split(',')[1], 'base64'));
 
   const metrics = await page.evaluate(`JSON.stringify({
     innerW: innerWidth, innerH: innerHeight,
@@ -78,14 +85,26 @@ try {
     dpr: devicePixelRatio,
   })`);
 
+  let shot = null;
+  if (!scrollMode) {
+    shot = await worker.evaluate(`chrome.tabs.captureVisibleTab(null, { format: 'png' })`);
+  }
+
   await worker.evaluate(`(async()=>{
-    const shots = {};
-    shots[${tabId}] = { shot: ${JSON.stringify(shot)}, at: Date.now() };
-    await chrome.storage.session.set({ 'gplens:shots': shots });
+    const overlays = {};
+    overlays[${tabId}] = {
+      at: Date.now(),
+      ...( ${scrollMode} ? {} : { shot: ${JSON.stringify(shot)} }),
+    };
+    await chrome.storage.session.set({ 'gplens:overlays': overlays });
     await chrome.scripting.executeScript({
       target: { tabId: ${tabId} },
       func: (cfg) => { globalThis.__GPLENS_INIT__ = cfg; },
-      args: [{ shot: ${JSON.stringify(shot)}, messages: { close: 'Close' } }],
+      args: [{
+        scrollDuringSelection: ${scrollMode},
+        shot: ${scrollMode} ? null : ${JSON.stringify(shot)},
+        messages: { close: 'Close' },
+      }],
     });
     await chrome.scripting.executeScript({
       target: { tabId: ${tabId} },
@@ -101,6 +120,28 @@ try {
 
   const before = await page.send('Page.captureScreenshot', { format: 'png' });
   writeFileSync(join(outDir, `overlay-${opts.scale}x.png`), Buffer.from(before.data, 'base64'));
+
+  const scrollBefore = await page.evaluate('scrollY');
+  if (scrollMode) {
+    await page.send('Input.dispatchMouseEvent', {
+      type: 'mouseWheel',
+      x: SELECT.x,
+      y: SELECT.y,
+      deltaX: 0,
+      deltaY: 520,
+    });
+    await waitFor(() => page.evaluate('scrollY > 0'), { label: 'page scroll under overlay' });
+  }
+  const scrollAfter = await page.evaluate('scrollY');
+  console.log(`${scrollMode ? 'page scroll under overlay' : 'frozen page scroll'}:`, scrollBefore, '->', scrollAfter);
+
+  if (scrollMode) {
+    const hidden = await worker.evaluate(`chrome.tabs.sendMessage(${tabId}, { type: 'gplens:capture-hide' })`);
+    if (!hidden?.ok) throw new Error('overlay did not hide for expected screenshot');
+    shot = await worker.evaluate(`chrome.tabs.captureVisibleTab(null, { format: 'png' })`);
+    await worker.evaluate(`chrome.tabs.sendMessage(${tabId}, { type: 'gplens:capture-show' })`);
+  }
+  writeFileSync(join(outDir, `shot-${opts.scale}x.png`), Buffer.from(shot.split(',')[1], 'base64'));
 
   await page.send('Input.dispatchMouseEvent', {
     type: 'mousePressed', x: SELECT.x, y: SELECT.y, button: 'left', clickCount: 1, buttons: 1,
@@ -132,6 +173,11 @@ try {
     { label: 'pending capture' },
   );
   console.log('pending:', pending);
+  const popupState = await worker.evaluate(`(async()=>{
+    const stored = await chrome.storage.session.get('gplens:popup');
+    return JSON.stringify(stored['gplens:popup'] ?? null);
+  })()`);
+  console.log('popup storage:', popupState);
 
   const persists = await page.evaluate(`Boolean(document.getElementById('gplens-overlay-host'))`);
   console.log('overlay persists after search:', persists);
@@ -168,9 +214,15 @@ try {
   });
   console.log('pixel compare:', JSON.stringify({ ...compare, verdict: compare.geometryOk && compare.diffPixels === 0 ? 'PASS' : 'FAIL' }, null, 2));
 
-  const popups = await listTargets(opts.port);
-  const popup = popups.find(
-    (t) => t.type === 'page' && (t.url.includes(`${extensionId}/viewer/`) || t.url.includes('lens.google.com') || t.url.includes('google.com/search')),
+  const popup = await waitFor(
+    async () => (await listTargets(opts.port)).find(
+      (t) => t.type === 'page' && (
+        t.url.includes(`${extensionId}/viewer/`) ||
+        t.url.includes('lens.google.com') ||
+        t.url.includes('google.com/search')
+      ),
+    ),
+    { label: 'viewer popup', tries: 60, delay: 100 },
   );
   console.log('popup:', popup ? popup.url : 'MISSING');
 
@@ -181,14 +233,98 @@ try {
   })()`);
   console.log('escape closes overlay:', esc);
 
+  const incognitoAllowed = await worker.evaluate(
+    `chrome.extension.isAllowedIncognitoAccess().then((allowed) => allowed)`,
+  );
+  let incognitoGuard = null;
+  if (!incognitoAllowed) {
+    await worker.evaluate(`(async()=>{
+      await chrome.storage.local.set({
+        'gplens:settings': {
+          closeOverlayWithPopup: true,
+          scrollDuringSelection: true,
+          searchInIncognito: true,
+        },
+      });
+      const popup = (await chrome.storage.session.get('gplens:popup'))['gplens:popup'];
+      if (popup?.windowId != null) await chrome.windows.remove(popup.windowId).catch(() => {});
+      await chrome.storage.session.remove(['gplens:pending', 'gplens:popup']);
+    })()`);
+    const response = await worker.evaluate(`(async()=>{
+      await chrome.storage.session.set({
+        'gplens:overlays': {
+          [${tabId}]: { shot: ${JSON.stringify(shot)}, at: Date.now() },
+        },
+      });
+      const [injected] = await chrome.scripting.executeScript({
+        target: { tabId: ${tabId} },
+        func: (payload) => new Promise((resolve) => chrome.runtime.sendMessage(payload, resolve)),
+        args: [{
+          type: 'gplens:selection',
+          rect: ${JSON.stringify(SELECT)},
+          basis: { w: ${JSON.parse(metrics).innerW}, h: ${JSON.parse(metrics).innerH} },
+          scrollDuringSelection: false,
+        }],
+      });
+      return JSON.stringify(injected.result);
+    })()`).then(JSON.parse);
+    const optionsPage = await waitFor(
+      async () => (await listTargets(opts.port)).find(
+        (target) => target.url.includes(`${extensionId}/options/options.html`),
+      ),
+      { label: 'incognito permission guidance' },
+    );
+    const pendingAfterBlock = await worker.evaluate(`(async()=>{
+      const stored = await chrome.storage.session.get('gplens:pending');
+      return Boolean(stored['gplens:pending']);
+    })()`);
+    const viewerAfterBlock = (await listTargets(opts.port)).some(
+      (target) => target.url.includes(`${extensionId}/viewer/viewer.html`) ||
+        target.url.startsWith('https://lens.google.com/') ||
+        target.url.startsWith('https://www.google.com/search'),
+    );
+    incognitoGuard = {
+      incognitoAllowed,
+      response,
+      optionsOpened: Boolean(optionsPage),
+      pendingAfterBlock,
+      viewerAfterBlock,
+      verdict:
+        response?.ok === false &&
+        Boolean(optionsPage) &&
+        !pendingAfterBlock &&
+        !viewerAfterBlock
+          ? 'PASS'
+          : 'FAIL',
+    };
+    console.log('incognito permission guard:', JSON.stringify(incognitoGuard, null, 2));
+  }
+
   writeFileSync(
     join(outDir, `result-${opts.scale}x.json`),
-    JSON.stringify({ metrics: JSON.parse(metrics), select: SELECT, pending, compare, popup: popup?.url || null }, null, 2),
+    JSON.stringify({
+      metrics: JSON.parse(metrics),
+      select: SELECT,
+      scrollMode,
+      scrollBefore,
+      scrollAfter,
+      pending,
+      compare,
+      incognitoGuard,
+      popup: popup?.url || null,
+    }, null, 2),
   );
+  const cropOk = compare.geometryOk && compare.diffPixels === 0;
+  const incognitoGuardOk = incognitoAllowed || incognitoGuard?.verdict === 'PASS';
+  const scrollOk = scrollMode ? scrollAfter > scrollBefore : scrollAfter === scrollBefore;
+  if (!scrollOk || !cropOk || !popup || !esc || !incognitoGuardOk) {
+    process.exitCode = 1;
+  }
   console.log('done');
   page.close();
   worker.close();
 } catch (error) {
+  if (workerDiagnostics.length) console.error('service worker diagnostics:', workerDiagnostics);
   console.error('FAILED', String(error));
   process.exitCode = 1;
 } finally {

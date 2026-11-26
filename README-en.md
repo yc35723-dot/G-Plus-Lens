@@ -25,5 +25,7 @@ Once in selection mode, drag to select the area you want to search. Release the 
 Right-click the extension on the toolbar and select "Options".
 - **[Default] Exit selection mode when closing the results window**: When enabled, closing the search results window will return you directly to the original webpage instead of leaving the selection overlay active.
 - **Keyboard Shortcut**: Default is `Alt+Shift+S`, customizable.
+- **[Enabled by default] Allow scrolling while selecting**: The page remains dimmed while you select an area, but you can scroll with the mouse wheel. The extension captures the visible page after you finish selecting. Turn this off to restore the previous behavior, which freezes the page during selection.
+- **[Disabled by default] Search in an incognito window** *(experimental)*: When enabled, Google Lens opens in the browser's built-in incognito mode and receives the selected image directly, without using the G+Lens Viewer. It does not use the Google account signed in to your regular browser profile. You must also allow G+Lens to run in incognito mode in your browser's extension settings. Currently, the search briefly passes through Google's reverse image search page before opening Lens results; this limitation is still being investigated.
 
 ## G+Lens is not an official Google product. Google and Google Lens are trademarks of Google LLC.

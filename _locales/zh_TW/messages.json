@@ -23,6 +23,14 @@
     "message": "關閉",
     "description": "框選遮罩關閉鈕提示。"
   },
+  "overlayCaptureError": {
+    "message": "無法擷取此範圍，請重新框選一次。",
+    "description": "無法擷取選取範圍時在遮罩上顯示的錯誤。"
+  },
+  "overlayIncognitoUnavailable": {
+    "message": "無法在無痕視窗啟動 Google Lens 或提交圖片。請確認 G+Lens 已允許在無痕模式中使用，並檢查網路後重試；搜尋不會改用一般視窗。",
+    "description": "無法在無痕視窗啟動 Google Lens 或提交圖片時顯示的錯誤。"
+  },
   "viewerUploading": {
     "message": "正在用 Google 智慧鏡頭搜尋…",
     "description": "開始上傳時的狀態。"
@@ -71,6 +79,42 @@
     "message": "開啟時，關閉結果視窗會同時結束框選並回到原本的網頁。",
     "description": "設定頁勾選框提示。"
   },
+  "optionsSelectionGroup": {
+    "message": "框選行為",
+    "description": "設定頁中框選行為的區塊標題。"
+  },
+  "optionsScrollLabel": {
+    "message": "框選時允許捲動網頁",
+    "description": "設定頁中框選期間允許捲動的開關標籤。"
+  },
+  "optionsScrollHint": {
+    "message": "捲動時頁面會保持暗畫面，選取範圍後才擷取目前畫面。",
+    "description": "框選期間捲動功能的提示。"
+  },
+  "optionsIncognitoLabel": {
+    "message": "使用無痕視窗搜尋",
+    "description": "設定頁中無痕搜尋的開關標籤。"
+  },
+  "optionsIncognitoHint": {
+    "message": "【實驗性功能】讓 Lens 與一般瀏覽器的 Google 登入狀態分開。受限於瀏覽器限制，目前此功能只能較粗糙的呈現。👌",
+    "description": "無痕搜尋功能的提示。"
+  },
+  "optionsIncognitoAccess": {
+    "message": "要使用無痕搜尋，請在擴充功能詳細資料頁允許 G+Lens 在無痕模式中使用。",
+    "description": "擴充功能尚未獲得無痕存取權時的指引。"
+  },
+  "optionsIncognitoAccessButton": {
+    "message": "開啟擴充功能設定",
+    "description": "開啟 G+Lens 擴充功能詳細資料頁的按鈕。"
+  },
+  "optionsIncognitoAccessCheckError": {
+    "message": "無法確認無痕存取權，請前往擴充功能設定檢查權限。",
+    "description": "無法檢查無痕存取權時的替代提示。"
+  },
+  "optionsIncognitoOpenError": {
+    "message": "無法開啟擴充功能設定。請前往瀏覽器擴充功能頁面，允許 G+Lens 在無痕模式中使用。",
+    "description": "無法開啟擴充功能詳細資料頁時顯示的錯誤。"
+  },
   "optionsShortcutGroup": {
     "message": "鍵盤快速鍵",
     "description": "設定頁中快速鍵的區塊標題。"
@@ -94,5 +138,9 @@
   "optionsSaved": {
     "message": "已儲存",
     "description": "變更設定後的短暫提示。"
+  },
+  "optionsSettingsError": {
+    "message": "無法讀取或儲存設定。",
+    "description": "無法讀取或儲存擴充功能設定時顯示的錯誤。"
   }
 }

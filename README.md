@@ -1,10 +1,6 @@
 # G+Lens 
-[English README](README-en.md) 
 
-
-An extension for Brave, Edge, and other Chromium browsers that replicates Google Lens. Simply drag and select any area of a page to search the web with Google Lens. Requires Chromium 116 or higher.
-
-一個可在Brave、Edge等非Chrome的Chromium瀏覽器上，復刻Chrome的Google智慧鏡頭功能的擴充功能，可框選網頁任一區域，用 Google 智慧鏡頭搜尋。需要 Chromium 116 以上版本。
+一個可在Brave、Edge等非Chrome的Chromium瀏覽器上，復刻Chrome的Google智慧鏡頭功能的瀏覽器擴充功能。需要 Chromium 116 以上版本。
 <img width="1920" height="1080" alt="output" src="https://github.com/user-attachments/assets/0bf013b5-59ec-4295-9868-650d24ca3eef" />
 
 ## 下載與安裝
@@ -23,13 +19,15 @@ An extension for Brave, Edge, and other Chromium browsers that replicates Google
 | 右鍵選單 | 右鍵 → 用 G+Lens 搜尋 |
 | 快捷鍵 | `Alt+Shift+S` |
 
-進入框選模式後，拖曳框出要搜尋的範圍，放開滑鼠就會跳出搜尋結果視窗。按Esc可退出。
+進入框選模式後，拖曳框出要搜尋的範圍，放開滑鼠就會跳出搜尋結果視窗。
 
 ## 設定
 
 在工具列上右鍵此擴充功能，選擇「選項」
 - **【預設開啟】關閉結果視窗時一併結束框選**：開啟後，關掉搜尋結果視窗就直接回到原本的網頁，不會留在框選頁面
 - **快捷鍵**：預設 `Alt+Shift+S`，可自行更改
-<img width="872" height="530" alt="image" src="https://github.com/user-attachments/assets/e0199533-f593-43a4-b8d8-de6d70ee78e0" />
+- **【預設開啟】框選時允許捲動網頁**：框選時頁面會保持暗幕，仍可使用滑鼠滾輪捲動；選取範圍後才擷取目前畫面。關閉後恢復原本的凍結畫面操作。
+- **【預設關閉】使用無痕視窗搜尋**：(實驗性功能)開啟後，Google Lens 會直接透過瀏覽器內建無痕模式載入並接收框選圖片，不經過 G+Lens Viewer，不會沿用一般瀏覽器的 Google 登入狀態，但是一開始會先短暫經過Google的以圖搜圖頁面，這是目前我還在想辦法突破的限制
+
 
 ## G+Lens 不是 Google 官方產品。Google 與 Google 智慧鏡頭為 Google LLC 的商標。

@@ -18,6 +18,7 @@ export function parseArgs(argv) {
     else if (key === '--scale' && next) { out.scale = next; i += 1; }
     else if (key === '--fixture' && next) { out.fixture = next; i += 1; }
     else if (key === '--keep-profile') out.keepProfile = true;
+    else if (key === '--frozen') out.frozen = true;
   }
   return out;
 }

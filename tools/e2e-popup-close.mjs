@@ -73,7 +73,7 @@ try {
       const shot = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
       const shots = {};
       shots[${tabId}] = { shot, at: Date.now() };
-      await chrome.storage.session.set({ 'gplens:shots': shots });
+      await chrome.storage.session.set({ 'gplens:overlays': shots });
       await chrome.scripting.executeScript({
         target: { tabId: ${tabId} },
         func: (cfg) => { globalThis.__GPLENS_INIT__ = cfg; },
@@ -153,8 +153,8 @@ try {
     }
 
     const leftover = await worker.evaluate(`(async()=>{
-      const stored = await chrome.storage.session.get('gplens:shots');
-      return JSON.stringify(stored['gplens:shots'] ?? null);
+      const stored = await chrome.storage.session.get('gplens:overlays');
+      return JSON.stringify(stored['gplens:overlays'] ?? null);
     })()`);
     record(`${label}: shot storage cleared`, leftover === 'null', leftover);
   };

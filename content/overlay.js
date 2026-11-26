@@ -2,11 +2,12 @@
   const INIT = globalThis.__GPLENS_INIT__;
   delete globalThis.__GPLENS_INIT__;
   const HOST_ID = 'gplens-overlay-host';
-  if (!INIT || !INIT.shot || document.getElementById(HOST_ID)) return;
+  if (!INIT || document.getElementById(HOST_ID)) return;
 
   const MIN_SIZE = 12;
   const RESIZE_DELAY = 300;
   const rootEl = document.documentElement;
+  const allowScroll = Boolean(INIT.scrollDuringSelection);
 
   const host = document.createElement('div');
   host.id = HOST_ID;
@@ -59,6 +60,12 @@
     }
     .close:hover { background: rgba(32, 33, 36, .82); }
     .close svg { display: block; width: 14px; height: 14px; }
+    .status {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      display: none; max-width: min(80vw, 480px); padding: 8px 12px;
+      border-radius: 6px; background: rgba(32, 33, 36, .9); color: #fff;
+      text-align: center; pointer-events: none;
+    }
   `;
 
   const root = document.createElement('div');
@@ -66,11 +73,14 @@
 
   const shot = document.createElement('div');
   shot.className = 'shot';
-  const img = document.createElement('img');
-  img.src = INIT.shot;
-  img.draggable = false;
-  img.alt = '';
-  shot.appendChild(img);
+  let img = null;
+  if (INIT.shot) {
+    img = document.createElement('img');
+    img.src = INIT.shot;
+    img.draggable = false;
+    img.alt = '';
+    shot.appendChild(img);
+  }
 
   const shades = [];
   for (let i = 0; i < 4; i += 1) {
@@ -104,8 +114,17 @@
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>';
   root.appendChild(closeBtn);
 
-  shadow.append(style, shot, root);
+  const status = document.createElement('div');
+  status.className = 'status';
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  root.appendChild(status);
+
+  shadow.append(style);
+  if (img) shadow.appendChild(shot);
+  shadow.appendChild(root);
   rootEl.appendChild(host);
+  root.style.touchAction = allowScroll ? 'pan-x pan-y' : 'none';
 
   let canvasSize = { w: 1, h: 1 };
   let clip = { w: 1, h: 1 };
@@ -113,6 +132,7 @@
   let drag = null;
   let resizeTimer = 0;
   let closed = false;
+  let captureVisibility = null;
 
   function layout() {
     canvasSize = {
@@ -125,10 +145,12 @@
     };
     root.style.width = `${clip.w}px`;
     root.style.height = `${clip.h}px`;
-    img.style.width = `${canvasSize.w}px`;
-    img.style.height = `${canvasSize.h}px`;
-    shot.style.width = `${canvasSize.w}px`;
-    shot.style.height = `${canvasSize.h}px`;
+    if (img) {
+      img.style.width = `${canvasSize.w}px`;
+      img.style.height = `${canvasSize.h}px`;
+      shot.style.width = `${canvasSize.w}px`;
+      shot.style.height = `${canvasSize.h}px`;
+    }
     if (rect) {
       rect.x = Math.min(rect.x, clip.w);
       rect.y = Math.min(rect.y, clip.h);
@@ -297,9 +319,15 @@
         h: Math.round(rect.h),
       },
       basis: { w: canvasSize.w, h: canvasSize.h },
+      scrollDuringSelection: allowScroll,
     };
-    chrome.runtime.sendMessage(payload, () => {
-      void chrome.runtime.lastError;
+    chrome.runtime.sendMessage(payload, (response) => {
+      const error = chrome.runtime.lastError;
+      if (error || !response?.ok) {
+        status.textContent =
+          response?.error || INIT.messages?.captureError || 'Unable to capture this area.';
+        status.style.display = 'block';
+      }
     });
   }
 
@@ -318,7 +346,24 @@
   }
 
   function onHostMessage(msg, _sender, respond) {
-    if (!msg || msg.type !== 'gplens:close') return false;
+    if (!msg) return false;
+    if (msg.type === 'gplens:capture-hide') {
+      if (!host.isConnected || closed) {
+        respond?.({ ok: false });
+        return false;
+      }
+      captureVisibility = host.style.visibility;
+      host.style.visibility = 'hidden';
+      requestAnimationFrame(() => requestAnimationFrame(() => respond?.({ ok: true })));
+      return true;
+    }
+    if (msg.type === 'gplens:capture-show') {
+      host.style.visibility = captureVisibility ?? '';
+      captureVisibility = null;
+      respond?.({ ok: true });
+      return false;
+    }
+    if (msg.type !== 'gplens:close') return false;
     finish(false);
     if (respond) respond({ ok: true });
     return false;
@@ -332,15 +377,31 @@
       finish(true);
       return;
     }
-    if (scrollKeys.has(ev.key)) {
+    if (scrollKeys.has(ev.key) && !allowScroll) {
       ev.preventDefault();
       ev.stopPropagation();
     }
   }
 
   function onWheel(ev) {
+    if (allowScroll) {
+      clearSelectionForScroll();
+      return;
+    }
     ev.preventDefault();
     ev.stopPropagation();
+  }
+
+  function onPageScroll() {
+    if (allowScroll) clearSelectionForScroll();
+  }
+
+  function clearSelectionForScroll() {
+    clearTimeout(resizeTimer);
+    drag = null;
+    if (!rect) return;
+    rect = null;
+    render();
   }
 
   function onCloseClick(ev) {
@@ -371,6 +432,7 @@
     [closeBtn, 'click', onCloseClick, true],
     [window, 'keydown', onKeyDown, true],
     [window, 'resize', onResize, true],
+    [window, 'scroll', onPageScroll, true],
   ];
 
   function removeListeners() {
@@ -379,7 +441,7 @@
 
   for (const [target, type, fn, opt] of listeners) target.addEventListener(type, fn, opt);
   chrome.runtime.onMessage.addListener(onHostMessage);
-  img.addEventListener('load', layout, { once: true });
+  if (img) img.addEventListener('load', layout, { once: true });
   layout();
-  if (img.complete) layout();
+  if (img?.complete) layout();
 })();

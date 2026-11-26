@@ -23,6 +23,14 @@
     "message": "Close",
     "description": "Close button tooltip on the selection overlay."
   },
+  "overlayCaptureError": {
+    "message": "Unable to capture this area. Try selecting it again.",
+    "description": "Error shown on the overlay when the selected area could not be captured."
+  },
+  "overlayIncognitoUnavailable": {
+    "message": "Google Lens could not be opened or the image could not be submitted in incognito. Check G+Lens incognito access and your connection, then try again. Search will not fall back to a normal window.",
+    "description": "Error shown when Google Lens cannot be opened or submitted to in an incognito window."
+  },
   "viewerUploading": {
     "message": "Searching with Google Lens…",
     "description": "Status while the upload starts."
@@ -71,6 +79,42 @@
     "message": "When on, closing the result window also ends area selection and returns you to the page.",
     "description": "Options checkbox hint."
   },
+  "optionsSelectionGroup": {
+    "message": "Selection behavior",
+    "description": "Options section heading for selection behavior."
+  },
+  "optionsScrollLabel": {
+    "message": "Allow scrolling while selecting",
+    "description": "Options checkbox label for scrolling during selection."
+  },
+  "optionsScrollHint": {
+    "message": "Keep the page dimmed while scrolling; the current view is captured after you select an area.",
+    "description": "Options checkbox hint for scrolling during selection."
+  },
+  "optionsIncognitoLabel": {
+    "message": "Search in an incognito window",
+    "description": "Options checkbox label for incognito search."
+  },
+  "optionsIncognitoHint": {
+    "message": " [Experiment] Separating the Google login status in Lens from that of the standard browser. Due to browser limitations, the current implementation is somewhat rudimentary.",
+    "description": "Options checkbox hint for incognito search."
+  },
+  "optionsIncognitoAccess": {
+    "message": "To use incognito search, allow G+Lens in incognito mode on its extension details page, then quit Brave completely, including background processes, and restart it.",
+    "description": "Guidance shown when the extension is not allowed in incognito."
+  },
+  "optionsIncognitoAccessButton": {
+    "message": "Open extension settings",
+    "description": "Button that opens G+Lens extension details."
+  },
+  "optionsIncognitoAccessCheckError": {
+    "message": "Could not verify incognito access. Open extension settings to check the permission.",
+    "description": "Fallback guidance when checking incognito access fails."
+  },
+  "optionsIncognitoOpenError": {
+    "message": "Could not open extension settings. Open the browser extensions page and enable incognito access for G+Lens.",
+    "description": "Error shown when extension details could not be opened."
+  },
   "optionsShortcutGroup": {
     "message": "Keyboard shortcut",
     "description": "Options section heading for the keyboard shortcut."
@@ -94,5 +138,9 @@
   "optionsSaved": {
     "message": "Saved",
     "description": "Transient confirmation after changing a setting."
+  },
+  "optionsSettingsError": {
+    "message": "Could not load or save settings.",
+    "description": "Error shown when extension settings cannot be read or saved."
   }
 }

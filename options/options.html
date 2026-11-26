@@ -25,6 +25,30 @@
       </label>
     </section>
 
+    <section class="group" aria-labelledby="group-selection">
+      <h2 id="group-selection"></h2>
+
+      <label class="row" for="scroll-during-selection">
+        <input type="checkbox" id="scroll-during-selection" aria-describedby="scroll-hint">
+        <span class="row-text">
+          <span id="scroll-label" class="row-label"></span>
+          <span id="scroll-hint" class="row-hint"></span>
+        </span>
+      </label>
+
+      <label class="row" for="search-in-incognito">
+        <input type="checkbox" id="search-in-incognito" aria-describedby="incognito-hint">
+        <span class="row-text">
+          <span id="incognito-label" class="row-label"></span>
+          <span id="incognito-hint" class="row-hint"></span>
+        </span>
+      </label>
+      <div id="incognito-access" class="incognito-access" hidden>
+        <p id="incognito-access-message" class="row-hint" role="status" aria-live="polite"></p>
+        <button id="incognito-access-button" type="button" hidden></button>
+      </div>
+    </section>
+
     <section class="group" aria-labelledby="group-shortcut">
       <h2 id="group-shortcut"></h2>
 

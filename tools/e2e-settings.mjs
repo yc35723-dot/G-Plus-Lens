@@ -70,6 +70,8 @@ try {
 
   const initial = await page.evaluate(`JSON.stringify({
     checked: document.getElementById('close-with-popup').checked,
+    scrollChecked: document.getElementById('scroll-during-selection')?.checked ?? null,
+    incognitoChecked: document.getElementById('search-in-incognito')?.checked ?? null,
     title: document.getElementById('title').textContent,
     groupText: document.getElementById('group-result').textContent,
     shortcutText: document.getElementById('shortcut-keys').textContent.trim(),
@@ -79,6 +81,8 @@ try {
   })`).then(JSON.parse);
 
   record('options: checkbox defaults to checked', initial.checked === true, String(initial.checked));
+  record('options: scrolling toggle defaults to checked', initial.scrollChecked === true, String(initial.scrollChecked));
+  record('options: incognito toggle defaults to unchecked', initial.incognitoChecked === false, String(initial.incognitoChecked));
   record('options: heading has content', initial.groupText.length > 0, initial.groupText);
   record('options: shortcut rendered as kbd elements', initial.shortcutKbds.length >= 3, JSON.stringify(initial.shortcutKbds));
 
@@ -97,6 +101,47 @@ try {
   );
   record('options: unassigned warning hidden', initial.emptyHidden === true, String(initial.emptyHidden));
   record('options: change button is labelled', initial.changeLabel.length > 0, initial.changeLabel);
+
+  const incognitoAllowed = await worker.evaluate(
+    `chrome.extension.isAllowedIncognitoAccess().then((allowed) => allowed)`,
+  );
+  await page.evaluate(`(async()=>{
+    const scroll = document.getElementById('scroll-during-selection');
+    const incognito = document.getElementById('search-in-incognito');
+    if (!scroll || !incognito) return 'missing controls';
+    scroll.checked = false;
+    scroll.dispatchEvent(new Event('change', { bubbles: true }));
+    incognito.checked = true;
+    incognito.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 300));
+    return 'done';
+  })()`);
+  const newSettings = await worker.evaluate(`(async()=>{
+    const stored = await chrome.storage.local.get('gplens:settings');
+    return JSON.stringify(stored['gplens:settings'] ?? null);
+  })()`).then(JSON.parse);
+  record('storage: scroll and incognito toggles persist independently', newSettings?.scrollDuringSelection === false && newSettings?.searchInIncognito === true, JSON.stringify(newSettings));
+  const accessPrompt = await page.evaluate(`JSON.stringify({
+    visible: !document.getElementById('incognito-access').hidden,
+    buttonVisible: !document.getElementById('incognito-access-button').hidden,
+  })`).then(JSON.parse);
+  record(
+    'options: missing incognito access shows guidance',
+    incognitoAllowed || (accessPrompt.visible && accessPrompt.buttonVisible),
+    JSON.stringify({ incognitoAllowed, ...accessPrompt }),
+  );
+  if (!incognitoAllowed) {
+    await page.evaluate(`document.getElementById('incognito-access-button').click()`);
+    const extensionSettings = await waitFor(
+      async () => (await listTargets(opts.port)).find((t) => t.url === `chrome://extensions/?id=${id}`),
+      { label: 'extension incognito permission settings', tries: 40 },
+    );
+    record(
+      'options: access button opens this extension details page',
+      Boolean(extensionSettings),
+      extensionSettings?.url || '(missing)',
+    );
+  }
 
   await page.evaluate(`(async()=>{
     const box = document.getElementById('close-with-popup');
@@ -118,6 +163,38 @@ try {
   await sleep(1200);
   const afterReload = await page.evaluate(`document.getElementById('close-with-popup').checked`);
   record('options: unchecked state survives reload', afterReload === false, String(afterReload));
+  const newSettingsAfterReload = await page.evaluate(`JSON.stringify({
+    scroll: document.getElementById('scroll-during-selection')?.checked ?? null,
+    incognito: document.getElementById('search-in-incognito')?.checked ?? null,
+  })`).then(JSON.parse);
+  record(
+    'options: new settings survive reload independently',
+    newSettingsAfterReload.scroll === false && newSettingsAfterReload.incognito === true,
+    JSON.stringify(newSettingsAfterReload),
+  );
+
+  await page.evaluate(`(async()=>{
+    const scroll = document.getElementById('scroll-during-selection');
+    const incognito = document.getElementById('search-in-incognito');
+    scroll.checked = true;
+    scroll.dispatchEvent(new Event('change', { bubbles: true }));
+    incognito.checked = false;
+    incognito.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 300));
+  })()`);
+  const settingsAfterDisable = await worker.evaluate(`(async()=>{
+    const stored = await chrome.storage.local.get('gplens:settings');
+    return JSON.stringify(stored['gplens:settings'] ?? null);
+  })()`).then(JSON.parse);
+  record(
+    'storage: both new toggles can be turned off and on independently',
+    settingsAfterDisable?.scrollDuringSelection === true && settingsAfterDisable?.searchInIncognito === false,
+    JSON.stringify(settingsAfterDisable),
+  );
+  const promptHidden = await page.evaluate(
+    `document.getElementById('incognito-access').hidden`,
+  );
+  record('options: disabling incognito search hides permission guidance', promptHidden, String(promptHidden));
 
   await page.evaluate(`(async()=>{
     const box = document.getElementById('close-with-popup');
